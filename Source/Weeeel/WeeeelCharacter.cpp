@@ -8,6 +8,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "WeeelAbilitySystem.h"
+#include "WeeelAttributeSet.h"
+#include "WeeelGameplayAbility.h"
+#include <GameplayEffectTypes.h>
 
 //////////////////////////////////////////////////////////////////////////
 // AWeeeelCharacter
@@ -43,6 +47,14 @@ AWeeeelCharacter::AWeeeelCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	//ability system
+	AbilitySystemComponent = CreateDefaultSubobject<UWeeelAbilitySystem>("AbilitySystemComp");
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+
+	Attributes = CreateDefaultSubobject<UWeeelAttributeSet>("Attributes");
+	//------------------------------
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
@@ -74,6 +86,12 @@ void AWeeeelCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AWeeeelCharacter::OnResetVR);
+
+	if (AbilitySystemComponent && InputComponent) {
+		const FGameplayAbilityInputBinds Binds("Confirm", "Cancel", "EWeeeelAbilityInputID",
+			static_cast<int32>(EWeeeelAbilityInputID::Confirm), static_cast<int32>(EWeeeelAbilityInputID::Cancel));
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
+	}
 }
 
 
@@ -137,4 +155,60 @@ void AWeeeelCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
+}
+
+//getAbilitySystem
+
+class UAbilitySystemComponent* AWeeeelCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+
+void AWeeeelCharacter::InitializeAttributes() {
+	if (AbilitySystemComponent && DefaultAttributeEffect) {
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributeEffect, 1, EffectContext);
+
+		if (SpecHandle.IsValid()) {
+			FActiveGameplayEffectHandle GEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
+}
+
+void AWeeeelCharacter::GiveAbilities() {
+	if (HasAuthority() && AbilitySystemComponent) {
+		for (TSubclassOf<class UWeeelGameplayAbility>& StartupAbility : DefaultAbilities) {
+			AbilitySystemComponent->GiveAbility(
+				FGameplayAbilitySpec(StartupAbility, 1, static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityInputId), this)
+			);
+		}
+	}
+}
+
+void AWeeeelCharacter::PossessedBy(AController* NewController) {
+	Super::PossessedBy(NewController);
+	//server GAS Init
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);//character as ability owner
+
+	InitializeAttributes();
+	GiveAbilities();
+}
+
+
+void AWeeeelCharacter::OnRep_PlayerState() {
+	Super::OnRep_PlayerState();
+
+	//client GAS Init
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);//character as ability owner
+	InitializeAttributes();
+
+	if (AbilitySystemComponent && InputComponent) {
+		const FGameplayAbilityInputBinds Binds("Confirm", "Cancel", "EWeeeelAbilityInputID", 
+			static_cast<int32>(EWeeeelAbilityInputID::Confirm), static_cast<int32>(EWeeeelAbilityInputID::Cancel));
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
+	}
+
 }

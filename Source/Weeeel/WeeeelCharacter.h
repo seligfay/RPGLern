@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
+#include <GameplayEffectTypes.h>
 #include "WeeeelCharacter.generated.h"
 
 UCLASS(config=Game)
-class AWeeeelCharacter : public ACharacter
+class AWeeeelCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -18,6 +20,12 @@ class AWeeeelCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ability", meta = (AllowPrivateAccess = "true"))
+		class UWeeelAbilitySystem* AbilitySystemComponent;
+
+	UPROPERTY()
+		class UWeeelAttributeSet* Attributes;
 public:
 	AWeeeelCharacter();
 
@@ -28,6 +36,20 @@ public:
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
+
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	virtual void InitializeAttributes();
+	virtual void GiveAbilities();
+
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
+
+	UPROPERTY(BlueprintreadOnly, EditDefaultsOnly, Category = "AbilitySystem")
+		TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "AbilitySystem")
+		TArray<TSubclassOf<class UWeeelGameplayAbility>> DefaultAbilities;
 
 protected:
 
