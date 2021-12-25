@@ -11,5 +11,15 @@ enum class EWeeeelAbilityInputID : uint8
 	Confirm,
 	Cancel,
 	LeftPunch,
-	RightPunch
+	RightPunch,
+	UseAbility1,
+	UseAbility2,
+	UseAbility3,
+	UseAbility4,
+	UseAbility5,
+	UseAbility6,
+	UseAbility7,
+	UseAbility8,
+	UseAbility9,
+	UseAbility0,
 };

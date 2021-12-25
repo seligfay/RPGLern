@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "Public/PawnWidgets/FloatingStatusBar.h"
 #include <GameplayEffectTypes.h>
+
 #include "WeeeelCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -24,10 +26,24 @@ class AWeeeelCharacter : public ACharacter, public IAbilitySystemInterface
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ability", meta = (AllowPrivateAccess = "true"))
 		class UWeeelAbilitySystem* AbilitySystemComponent;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
+		class UWidgetComponent* FloatingWidget;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Ability", meta = (AllowPrivateAccess = "true"))
 		class UWeeelAttributeSet* Attributes;
+
+	
 public:
+
 	AWeeeelCharacter();
+
+	virtual void BeginPlay() override;
+
+	virtual void OnHealthChange(const FOnAttributeChangeData& Data);
+
+	virtual void OnStaminaChange(const FOnAttributeChangeData& Data);
+
+	virtual void OnManaChange(const FOnAttributeChangeData& Data);
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -51,7 +67,30 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "AbilitySystem")
 		TArray<TSubclassOf<class UWeeelGameplayAbility>> DefaultAbilities;
 
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+		float GetHealth() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+		float GetMaxHealth() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+		float GetMana() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+		float GetMaxMana() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+		float GetStamina() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+		float GetMaxStamina() const;
+
+
 protected:
+
+	virtual void Destroyed();
+
+	void CallRestartPlayer();
 
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();

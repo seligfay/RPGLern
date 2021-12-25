@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
 #include "AbilitySystemComponent.h"
+
 #include "WeeelAttributeSet.generated.h"
+
 
 
 //macro from attributeSet
@@ -14,6 +16,8 @@
 		GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName)\
 		GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName)\
 		GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
+
+
 
 
 /**
@@ -35,7 +39,7 @@ public:
 	ATTRIBUTE_ACCESSORS(UWeeelAttributeSet, Health);//visible access
 
 	UFUNCTION()
-		virtual void OnRep_Health(const FGameplayAttributeData& OldHealth); //set replication func
+		virtual void OnRep_Health(const FGameplayAttributeData& OldHealth); 
 
 	//Stamina
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Stamina)
@@ -53,6 +57,32 @@ public:
 	UFUNCTION()
 		virtual void OnRep_Mana(const FGameplayAttributeData& OldMana); //set replication func
 
+
+	//MaxHealth
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxHealth)
+		FGameplayAttributeData MaxHealth;
+	ATTRIBUTE_ACCESSORS(UWeeelAttributeSet, MaxHealth);//visible access
+
+
+	UFUNCTION()
+		virtual void OnRep_MAxHealth(const FGameplayAttributeData& OldMaxHealth); //set replication func
+
+	//MaxStamina
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxStamina)
+		FGameplayAttributeData MaxStamina;
+	ATTRIBUTE_ACCESSORS(UWeeelAttributeSet, MaxStamina);//visible access
+
+	UFUNCTION()
+		virtual void OnRep_MaxStamina(const FGameplayAttributeData& OldSMaxStamina); //set replication func
+
+	//MaxMana
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxMana)
+		FGameplayAttributeData MaxMana;
+	ATTRIBUTE_ACCESSORS(UWeeelAttributeSet, MaxMana);//visible access
+
+	UFUNCTION()
+		virtual void OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana); //set replication func
+
 	//Power
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Power)
 		FGameplayAttributeData Power;
@@ -60,6 +90,31 @@ public:
 
 	UFUNCTION()
 		virtual void OnRep_Power(const FGameplayAttributeData& OldPower); //set replication func
+
+	//HealthRegen
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_HealthRegen)
+		FGameplayAttributeData HealthRegen;
+	ATTRIBUTE_ACCESSORS(UWeeelAttributeSet, HealthRegen);//visible access
+
+	UFUNCTION()
+		virtual void OnRep_HealthRegen(const FGameplayAttributeData& OldHealthRegen); //set replication func
+
+	//ManaRegen
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_ManaRegen)
+		FGameplayAttributeData ManaRegen;
+	ATTRIBUTE_ACCESSORS(UWeeelAttributeSet, ManaRegen);//visible access
+
+	UFUNCTION()
+		virtual void OnRep_ManaRegen(const FGameplayAttributeData& OldManaRegen); //set replication func
+
+	//StaminaRegen
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_StaminaRegen)
+		FGameplayAttributeData StaminaRegen;
+	ATTRIBUTE_ACCESSORS(UWeeelAttributeSet, StaminaRegen);//visible access
+
+	UFUNCTION()
+		virtual void OnRep_StaminaRegen(const FGameplayAttributeData& OldStaminaRegen); //set replication func
+	
 };
 
 

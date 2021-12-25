@@ -14,5 +14,5 @@ UCLASS()
 class WEEEEL_API UWeeelAbilitySystem : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
-	
+
 };

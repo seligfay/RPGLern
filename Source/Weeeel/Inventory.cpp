@@ -3,15 +3,30 @@
 
 #include "Inventory.h"
 
+
 // Sets default values for this component's properties
 UInventory::UInventory()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
+	SetIsReplicatedByDefault(true);
 	this->fullInit = false;
 	this->GenerateCellOnStart = 0;
+
+
 	// ...
+}
+
+void UInventory::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME_CONDITION_NOTIFY(UInventory, Inventory, COND_None, REPNOTIFY_OnChanged );
+}
+
+void UInventory::OnRep_Inventory(const TArray<FItemSlot>& OldStamina)
+{
+	InventoryUpdate.Broadcast();
 }
 
 
@@ -43,6 +58,8 @@ void UInventory::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompo
 	// ...
 }
 
+
+
 bool UInventory::addItemInSlot(FItemSlot Item, int slotIndex, FItemSlot& notFitItem) {
 	bool success = false;
 	notFitItem = Item;
@@ -68,7 +85,7 @@ bool UInventory::addItemInSlot(FItemSlot Item, int slotIndex, FItemSlot& notFitI
 		}
 		
 	}
-
+	InventoryUpdate.Broadcast();
 	return success;
 }
 
@@ -100,7 +117,7 @@ bool UInventory::addToStack(FItemSlot Item, int slotIndex, FItemSlot &notFitItem
 			
 		}
 	}
-
+	InventoryUpdate.Broadcast();
 	return success;
 }
 
@@ -121,6 +138,7 @@ bool UInventory::removeItemFromSlotAndReturnItem(int slotIndex, FItemSlot& item)
 			success = true;
 		}
 	}
+	InventoryUpdate.Broadcast();
 	return success;
 }
 
@@ -137,6 +155,7 @@ bool UInventory::removeItemFromSlot(int slotIndex) {
 			success = true;
 		}
 	}
+	InventoryUpdate.Broadcast();
 	return success;
 }
 
@@ -152,6 +171,7 @@ int UInventory::removeFromStack(int removedItems, int slotIndex) {
 			Inventory[slotIndex].Count -= removedItems;
 		}
 	}
+	InventoryUpdate.Broadcast();
 	return result;
 }
 
@@ -169,7 +189,7 @@ bool UInventory::changeItemSlot(int newSlotIndex, int oldSlotIndex) {
 		}
 
 	}
-
+	InventoryUpdate.Broadcast();
 	return result;
 }
 
@@ -222,6 +242,7 @@ bool UInventory::addItem(FItemSlot Item, FItemSlot& notFitItem) {
 		}
 		
 	}
+	InventoryUpdate.Broadcast();
 	return result;
 }
 
@@ -233,7 +254,7 @@ void UInventory::CreateInventorySlots(int cellCount) {
 			EmptySlot.ItemInfo.RowName = (FName)"Empty";
 			Inventory.Add(EmptySlot);
 		}
-		
+		InventoryUpdate.Broadcast();
 }
 
 bool UInventory::dragSomeStackItemInNewSlot(int oldSlotIndex, int newSlotIndex, int draggedItem) {
@@ -268,7 +289,7 @@ bool UInventory::dragSomeStackItemInNewSlot(int oldSlotIndex, int newSlotIndex, 
 			}
 		}
 	}
-
+	InventoryUpdate.Broadcast();
 	return result;
 }
 	

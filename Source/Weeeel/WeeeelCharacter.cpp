@@ -11,6 +11,9 @@
 #include "WeeelAbilitySystem.h"
 #include "WeeelAttributeSet.h"
 #include "WeeelGameplayAbility.h"
+#include "Components/WidgetComponent.h"
+#include "Public/PlayerControllers/MainPlayerController.h"
+#include "WeeeelGameMode.h"
 #include <GameplayEffectTypes.h>
 
 //////////////////////////////////////////////////////////////////////////
@@ -52,11 +55,64 @@ AWeeeelCharacter::AWeeeelCharacter()
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
+	FloatingWidget = CreateDefaultSubobject<UWidgetComponent>(FName("UIFloatingStatusBarComponent"));
+	FloatingWidget->SetupAttachment(RootComponent);
+
 	Attributes = CreateDefaultSubobject<UWeeelAttributeSet>("Attributes");
+
+	
+
+
 	//------------------------------
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+}
+
+void AWeeeelCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	if (AbilitySystemComponent) {
+		UFloatingStatusBar* widget = Cast<UFloatingStatusBar>(FloatingWidget->GetWidget());
+		if (widget != nullptr) {
+			widget->SetHealthPercentage(Attributes->GetHealth() / Attributes->GetMaxHealth());
+			widget->SetStaminaPercentage(Attributes->GetStamina() / Attributes->GetMaxStamina());
+			widget->SetManaPercentage(Attributes->GetMana() / Attributes->GetMaxMana());
+		}
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Attributes->GetHealthAttribute()).AddUObject(this, &AWeeeelCharacter::OnHealthChange);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Attributes->GetStaminaAttribute()).AddUObject(this, &AWeeeelCharacter::OnStaminaChange);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Attributes->GetManaAttribute()).AddUObject(this, &AWeeeelCharacter::OnManaChange);
+		//Attributes->onChangeHealth.BindUObject(widget, &UFloatingStatusBar::SetHealthPercentage);
+	}
+}
+
+void AWeeeelCharacter::OnHealthChange(const FOnAttributeChangeData& Data)
+{
+	UFloatingStatusBar* widget = Cast<UFloatingStatusBar>(FloatingWidget->GetWidget());
+	float procentage = Attributes->GetHealth() / Attributes->GetMaxHealth();
+	if (!(procentage > 0)) {
+		CallRestartPlayer();
+	}
+	if (widget != nullptr) {
+		widget->SetHealthPercentage(procentage);
+	}
+
+}
+
+void AWeeeelCharacter::OnStaminaChange(const FOnAttributeChangeData& Data)
+{
+	UFloatingStatusBar* widget = Cast<UFloatingStatusBar>(FloatingWidget->GetWidget());
+	if (widget != nullptr) {
+		widget->SetStaminaPercentage(Attributes->GetStamina() / Attributes->GetMaxStamina());
+	}
+}
+
+void AWeeeelCharacter::OnManaChange(const FOnAttributeChangeData& Data)
+{
+	UFloatingStatusBar* widget = Cast<UFloatingStatusBar>(FloatingWidget->GetWidget());
+	if (widget != nullptr) {
+		widget->SetManaPercentage(Attributes->GetMana() / Attributes->GetMaxMana());
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -175,6 +231,7 @@ void AWeeeelCharacter::InitializeAttributes() {
 		if (SpecHandle.IsValid()) {
 			FActiveGameplayEffectHandle GEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
+		
 	}
 }
 
@@ -210,5 +267,82 @@ void AWeeeelCharacter::OnRep_PlayerState() {
 			static_cast<int32>(EWeeeelAbilityInputID::Confirm), static_cast<int32>(EWeeeelAbilityInputID::Cancel));
 		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
 	}
+	
 
+}
+
+float AWeeeelCharacter::GetHealth() const
+{
+	if (Attributes)
+	{
+		return Attributes->GetHealth();
+	}
+
+	return 0.0f;
+}
+
+float AWeeeelCharacter::GetMaxHealth() const
+{
+	if (Attributes)
+	{
+		return Attributes->GetMaxHealth();
+	}
+
+	return 0.0f;
+}
+
+float AWeeeelCharacter::GetMana() const
+{
+	if (Attributes)
+	{
+		return Attributes->GetMana();
+	}
+
+	return 0.0f;
+}
+
+float AWeeeelCharacter::GetMaxMana() const
+{
+	if (Attributes)
+	{
+		return Attributes->GetMaxMana();
+	}
+
+	return 0.0f;
+}
+
+float AWeeeelCharacter::GetStamina() const
+{
+	if (Attributes)
+	{
+		return Attributes->GetStamina();
+	}
+
+	return 0.0f;
+}
+
+float AWeeeelCharacter::GetMaxStamina() const
+{
+	if (Attributes)
+	{
+		return Attributes->GetMaxStamina();
+	}
+
+	return 0.0f;
+}
+
+void AWeeeelCharacter::Destroyed()
+{
+	Super::Destroyed();
+}
+
+void AWeeeelCharacter::CallRestartPlayer()
+{
+	AMainPlayerController* PCref = Cast<AMainPlayerController>(GetController());
+	if (PCref) {
+		PCref->ActorHealthIsZero();
+	}
+	else {
+		Destroy();
+	}
 }

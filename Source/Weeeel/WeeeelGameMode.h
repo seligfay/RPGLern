@@ -6,6 +6,10 @@
 #include "GameFramework/GameModeBase.h"
 #include "WeeeelGameMode.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPLayerDiedSIgnature, ACharacter*, Character);
+
+
+
 UCLASS(minimalapi)
 class AWeeeelGameMode : public AGameModeBase
 {
@@ -13,6 +17,7 @@ class AWeeeelGameMode : public AGameModeBase
 
 public:
 	AWeeeelGameMode();
+
 };
 
 
